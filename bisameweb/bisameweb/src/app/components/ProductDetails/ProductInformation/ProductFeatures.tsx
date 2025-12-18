@@ -11,7 +11,7 @@ interface Feature {
 interface ProductFeatureProps {
   features: Feature[];
   isLoading: boolean;
-  product: Product;
+  product?: Product;
 }
 
 const ProductFeatures: React.FC<ProductFeatureProps> = ({

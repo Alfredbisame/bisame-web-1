@@ -7,51 +7,11 @@ import ProductInfo from "./ProductInfo";
 import LoadingSkeleton from "./LoadingSkeleton";
 import ErrorDisplay from "./ErrorDisplay";
 import { useProductData } from "./hooks/useProductData";
+export type { Product, ProductImage } from "./hooks/useProductData";
 import ViewsAndFollow from "./ViewsAndFollow";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/app/hooks/useUser";
 import toast from "react-hot-toast";
-
-// Updated interfaces to match the new API structure
-interface ProductImage {
-  imageUrl: string;
-  id: string;
-}
-
-interface ProductUserInfo {
-  name: string;
-  profilePicture: string;
-}
-
-export interface Product {
-  _id: string;
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  subCategory: string;
-  price: number | string;
-  contactNumber: string;
-  totalViews: number;
-  location: string;
-  userId: string;
-  isPromoted: boolean;
-  images: ProductImage[];
-  userInfo: ProductUserInfo;
-  status: string;
-  negotiable: boolean;
-  attributes: object;
-  isFavorite: boolean;
-  totalReviews: number;
-  isFollowed: boolean;
-  createdAt: string;
-  updatedAt: string;
-  brand?: string;
-  availability?: string;
-  rating?: number;
-  reviews?: number | unknown[];
-  [key: string]: unknown;
-}
 
 const ProductDetail: FC = () => {
   const searchParams = useSearchParams();
@@ -117,4 +77,3 @@ const ProductDetail: FC = () => {
 };
 
 export default ProductDetail;
-export type { ProductImage };

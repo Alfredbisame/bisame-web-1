@@ -1,3 +1,4 @@
+'use client';
 import { useState } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 
@@ -25,7 +26,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ onSort }) => {
     setSelectedSort(value);
     onSort?.(value);
   };
-  
+
   return (
     <div className="flex items-center space-x-6 p-4">
       <label className="text-gray-700 font-medium whitespace-nowrap text-sm md:text-base">Sort by:</label>
@@ -54,7 +55,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({ onSort }) => {
       </div>
     </div>
   );
-  
+
 };
 
 export default SortDropdown;

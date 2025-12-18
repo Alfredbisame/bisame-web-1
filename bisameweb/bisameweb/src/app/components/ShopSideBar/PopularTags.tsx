@@ -1,3 +1,4 @@
+'use client';
 import { useState } from "react";
 
 interface Tag {
@@ -47,10 +48,9 @@ const PopularTags: React.FC = () => {
             onClick={() => handleTagClick(tag.id)}
             className={`
               px-3 py-2 rounded-md border transition-all duration-200
-              ${
-                selectedTags.has(tag.id)
-                  ? "border-orange-500 text-orange-500 bg-orange-50 hover:bg-orange-100"
-                  : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-500"
+              ${selectedTags.has(tag.id)
+                ? "border-orange-500 text-orange-500 bg-orange-50 hover:bg-orange-100"
+                : "border-gray-300 text-gray-600 hover:border-orange-500 hover:text-orange-500"
               }
             `}
           >

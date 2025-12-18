@@ -66,7 +66,7 @@ const fetcher = async (url: string): Promise<ApiResponse> => {
   }
 };
 
-export const useRelatedProducts = (category?: string, subCategory?: string, childCategory?: string, page: number = 1, pageSize: number = 12) => {
+export const useRelatedProducts = (category?: string | null, subCategory?: string | null, childCategory?: string | null, page: number = 1, pageSize: number = 12) => {
   const [retryCount, setRetryCount] = useState(0);
 
   const shouldFetch = !!category;

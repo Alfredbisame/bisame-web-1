@@ -1,3 +1,4 @@
+'use client';
 import { useState, ChangeEvent } from 'react';
 
 interface PriceOption {
@@ -50,7 +51,7 @@ const PriceRange: React.FC = () => {
     <div className="flex flex-start items-center">
       <div className="bg-white p-4">
         <h2 className="md:text-lg font-bold mb-3 text-gray-800 lg:mt-24">PRICE RANGE</h2>
-        
+
         <div className="flex items-center mb-6">
           <input
             type="range"
@@ -60,7 +61,7 @@ const PriceRange: React.FC = () => {
             onChange={handleRangeChange}
             className="w-full h-2 bg-gray-200 appearance-none cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #f97316 0%, #f97316 ${sliderValue/10}%, #e5e7eb ${sliderValue/10}%, #e5e7eb 100%)`,
+              background: `linear-gradient(to right, #f97316 0%, #f97316 ${sliderValue / 10}%, #e5e7eb ${sliderValue / 10}%, #e5e7eb 100%)`,
             }}
           />
         </div>
