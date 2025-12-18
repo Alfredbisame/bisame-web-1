@@ -4,6 +4,7 @@ import {
   browserPopupRedirectResolver,
 } from "@/firebase/firebaseConfig";
 import axios from "axios";
+import { getApiConfig } from "@/app/utils/apiConfig"; // Added import
 import {
   signInWithPopup,
   signInWithRedirect,
@@ -16,6 +17,7 @@ let inFlight = false;
 
 const useSocialAuth = () => {
   const signIn = async () => {
+    // ... (rest of the code)
     if (inFlight) return;
     inFlight = true;
 
@@ -65,16 +67,8 @@ const useSocialAuth = () => {
       };
 
       // Configure apiUrl
-      const baseUrl = process.env.NEXT_PUBLIC_AUTH_API_BASE_URL;
-      const authUrl = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_API_URL;
-
-      // Run checks for missing url
-      if (!baseUrl || !authUrl) {
-        throw new Error("Missing environment variable");
-      }
-
-      // Concatenate urls
-      const apiUrl = `${baseUrl}${authUrl}`;
+      const { endpoints } = getApiConfig();
+      const apiUrl = endpoints.googleLogin;
 
       const response = await axios.post(apiUrl, payload, {
         headers: {

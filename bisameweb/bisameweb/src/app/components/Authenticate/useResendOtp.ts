@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-hot-toast";
 import { getTime } from "@/app/utils/verify";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 interface ResendOTPResponse {
   code: number;
@@ -16,6 +17,11 @@ interface ResendOTPResponse {
 
 // Mutation fetcher for SWR (no arg)
 async function resendOTPCode(url: string): Promise<ResendOTPResponse> {
+  const { endpoints } = getApiConfig();
+  // ignore the url arg if we are hardcoding, or pass the correct one via useSWRMutation
+  // Actually easier to just use the new URL inside here
+  const endpoint = endpoints.resendOtp;
+
   if (typeof window === "undefined") {
     throw new Error("Resend OTP can only be used in the browser");
   }
@@ -29,9 +35,9 @@ async function resendOTPCode(url: string): Promise<ResendOTPResponse> {
     throw new Error("Authentication token not found. Please sign in again.");
   }
 
-  console.log("Resend OTP - Making request to:", url);
+  console.log("Resend OTP - Making request to:", endpoint);
 
-  const response = await fetch(url, {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -75,7 +81,7 @@ export const useResendOTP = () => {
   const { trigger: resendTrigger, isMutating: isResending } = useSWRMutation<
     ResendOTPResponse,
     Error
-  >("/api/auth/resend", resendOTPCode, {
+  >("resendOtp", resendOTPCode, {
     onSuccess: (data: ResendOTPResponse) => {
       console.log("Resend OTP successful:", data);
 

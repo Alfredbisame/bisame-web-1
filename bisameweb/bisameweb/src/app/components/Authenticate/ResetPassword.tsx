@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import CustomizePrompt from "../ui/CustomizePrompt";
 import { CiLock } from "react-icons/ci";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState("");
@@ -58,9 +59,10 @@ const ResetPassword: React.FC = () => {
 
       console.log("Sending change password request with payload:", payload);
 
+      const { endpoints } = getApiConfig();
       const response = await axios({
         method: "POST",
-        url: "/api/auth/changepassword",
+        url: endpoints.resetPassword,
         headers: {
           "Content-Type": "application/json",
         },
@@ -95,10 +97,9 @@ const ResetPassword: React.FC = () => {
             );
           } else {
             toast.error(
-              `Error: ${
-                error.response.data.message ||
-                error.response.data.error ||
-                "Failed to change password"
+              `Error: ${error.response.data.message ||
+              error.response.data.error ||
+              "Failed to change password"
               }`
             );
           }

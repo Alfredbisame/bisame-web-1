@@ -1,5 +1,6 @@
 import { auth } from "@/firebase/firebaseConfig";
 import axios from "axios";
+import { getApiConfig } from "@/app/utils/apiConfig"; // Added import here
 import {
   OAuthProvider,
   signInWithPopup,
@@ -51,18 +52,12 @@ const useAppleAuth = (options: UseAppleAuthOptions = {}) => {
         referralCode: null,
       };
 
+
+
       // ✅ FIXED: Removed withCredentials for same-origin requests
       // Configure apiUrl
-      const baseUrl = process.env.NEXT_PUBLIC_AUTH_API_BASE_URL;
-      const authUrl = process.env.NEXT_PUBLIC_APPLE_LOGIN_API_URL;
-
-      // Run checks for missing url
-      if (!baseUrl || !authUrl) {
-        throw new Error("Missing environment variable");
-      }
-
-      // Concatenate urls
-      const apiUrl = `${baseUrl}${authUrl}`;
+      const { endpoints } = getApiConfig();
+      const apiUrl = endpoints.appleLogin;
 
       console.log(apiUrl);
 

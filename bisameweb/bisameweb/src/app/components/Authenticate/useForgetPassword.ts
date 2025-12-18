@@ -4,6 +4,7 @@ import useSWRMutation from "swr/mutation";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { getTime } from "@/app/utils/verify";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 interface ApiError {
   response?: {
@@ -36,8 +37,9 @@ async function forgotPassword(
   url: string,
   { arg }: { arg: ForgotPasswordRequest }
 ) {
+  const { endpoints } = getApiConfig();
   return axios
-    .post("/api/auth/forget", arg, {
+    .post(endpoints.forgotPassword, arg, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -51,7 +53,7 @@ export const useForgetPassword = () => {
 
   // SWR Mutation for handling forgot password API call
   const { trigger, isMutating } = useSWRMutation(
-    "/api/auth/forget",
+    "forgotPassword",
     forgotPassword,
     {
       onSuccess: (data: ForgotPasswordResponse) => {
@@ -73,7 +75,7 @@ export const useForgetPassword = () => {
           if (data.data.phoneNumber) {
             if (typeof window !== "undefined") {
               localStorage.setItem("phoneNumber", data.data.phoneNumber);
-              localStorage.setItem("userId", data.data.phoneNumber); 
+              localStorage.setItem("userId", data.data.phoneNumber);
             }
           }
 
@@ -90,7 +92,7 @@ export const useForgetPassword = () => {
           // Show success message from API response
           toast.success(
             data.message ||
-              "Verification code sent successfully! Please check your phone."
+            "Verification code sent successfully! Please check your phone."
           );
 
           // Navigate to verification page
@@ -99,7 +101,7 @@ export const useForgetPassword = () => {
           // Handle unsuccessful response
           toast.error(
             data.message ||
-              "Failed to send verification code. Please try again."
+            "Failed to send verification code. Please try again."
           );
         }
       },

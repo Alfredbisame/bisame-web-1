@@ -11,10 +11,11 @@ export interface ApiErrorShape {
   details?: unknown;
 }
 
+import { getApiConfig } from "../../utils/apiConfig";
+
 function getBaseURL(): string {
-  const publicUrl = process.env.NEXT_PUBLIC_AUTH_API_BASE_URL;
-  const serverUrl = process.env.API_BASE_URL;
-  return (publicUrl || serverUrl || "http://195.35.36.122:1991").replace(/\/+$/, "");
+  const { authBaseUrl } = getApiConfig();
+  return authBaseUrl.replace(/\/+$/, "");
 }
 
 function createHttpClient(): AxiosInstance {

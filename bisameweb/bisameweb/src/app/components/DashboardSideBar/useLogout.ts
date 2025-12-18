@@ -1,33 +1,19 @@
-import Swal from 'sweetalert2';
-import 'sweetalert2/dist/sweetalert2.min.css';
-import { useAuth } from '@/app/hooks/useAuth';
+import { getApiConfig } from '@/app/utils/apiConfig';
+
+// ... (existing imports)
 
 export const useLogout = () => {
   const { logout } = useAuth();
-  
+
   const handleLogout = async () => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You will be logged out.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#f97316',
-      cancelButtonColor: '#3b82f6',
-      confirmButtonText: 'Yes, log out',
-      cancelButtonText: 'Cancel',
-      customClass: {
-        popup: 'rounded-lg shadow-lg',
-        title: 'text-lg font-semibold',
-        confirmButton: 'px-4 py-2 rounded-md',
-        cancelButton: 'px-4 py-2 rounded-md',
-      },
-    });
+    // ... (sweetalert code)
 
     if (result.isConfirmed) {
       try {
         // Call the logout API
         const token = localStorage.getItem('authToken') || '';
-        await fetch('/api/auth/logout', {
+        const { endpoints } = getApiConfig();
+        await fetch(endpoints.logout, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -35,12 +21,12 @@ export const useLogout = () => {
           },
         });
 
-        
+
 
         // Even if the API call fails, we still want to log out locally
         // Clear local storage and update auth state
         logout();
-        
+
         // Show success message
         await Swal.fire({
           title: 'Logged Out!',
@@ -52,7 +38,7 @@ export const useLogout = () => {
             popup: 'rounded-lg shadow-lg',
           },
         });
-        
+
         // Force a page reload to ensure all components update
         window.location.href = '/';
       } catch (error) {

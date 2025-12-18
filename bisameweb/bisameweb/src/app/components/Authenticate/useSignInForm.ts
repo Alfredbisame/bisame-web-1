@@ -32,18 +32,12 @@ interface LoginRequest {
   countryShortName: string;
 }
 
+import { getApiConfig } from "@/app/utils/apiConfig";
+
 // Function to handle login API call using the external route
 async function loginUser(url: string, { arg }: { arg: LoginRequest }) {
-  // apiUrl
-  const baseUrl = process.env.NEXT_PUBLIC_AUTH_API_BASE_URL;
-  const loginPath = process.env.NEXT_PUBLIC_LOGIN_API_URL;
-
-  if (!baseUrl || !loginPath) {
-    throw new Error("Missing env variable");
-  }
-
-  // Combine base URL and login path
-  const apiUrl = `${baseUrl.replace(/\/$/, "")}${loginPath}`;
+  const { endpoints } = getApiConfig();
+  const apiUrl = endpoints.login;
 
   return axios
     .post(apiUrl, arg, {
@@ -115,7 +109,7 @@ export const useSignInForm = (onLoginSuccess?: () => void) => {
           // Show success message from API response
           toast.success(
             data.message ||
-              "Successfully logged in! Please verify your account."
+            "Successfully logged in! Please verify your account."
           );
 
           // Dispatch custom event to notify other components

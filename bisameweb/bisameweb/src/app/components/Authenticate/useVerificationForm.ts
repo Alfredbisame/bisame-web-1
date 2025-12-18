@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import useSWRMutation from "swr/mutation";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 interface VerificationRequest {
   verificationCode: string;
@@ -40,7 +41,8 @@ async function verifyUser(
   url: string,
   { arg }: { arg: VerificationRequest }
 ): Promise<VerificationResponse> {
-  const response = await fetch(url, {
+  const { endpoints } = getApiConfig();
+  const response = await fetch(endpoints.verifyOtp, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

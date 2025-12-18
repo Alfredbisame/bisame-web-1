@@ -6,6 +6,7 @@ import { useCallback } from "react";
 // Import utilities and custom hooks
 import { validateSignUpForm, type FormData } from "./validationUtils";
 import { useFormState } from "./useFormState";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 interface RegisterRequestBody {
   first: string;
@@ -41,10 +42,11 @@ export const useSignUpForm = () => {
 
   // SWR Mutation for Form Submission
   const { trigger, isMutating, error } = useSWRMutation(
-    "/api/auth/register",
+    "register", // Key doesn't matter much for mutation but good to be consistent
     async (_, { arg }: { arg: RegisterRequestBody }) => {
       try {
-        const response = await fetch("/api/auth/register", {
+        const { endpoints } = getApiConfig();
+        const response = await fetch(endpoints.signup, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

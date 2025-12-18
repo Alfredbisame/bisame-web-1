@@ -27,8 +27,19 @@ interface ProfileResponse {
   message: string;
 }
 
+import { getApiConfig } from "@/app/utils/apiConfig";
+
+// Function to get API config
+const getProfileEndpoint = () => {
+  const { endpoints } = getApiConfig();
+  return endpoints.profile;
+};
+
 // Fetcher function for SWR
-const fetcher = async (url: string): Promise<ProfileData> => {
+const fetcher = async (url: string | null): Promise<ProfileData> => {
+  // Wait if url is null
+  if (!url) return {} as ProfileData;
+
   // Get the auth token from localStorage
   const token =
     typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
@@ -63,8 +74,9 @@ const getFullName = (data: ProfileData): string => {
 };
 
 export function useProfileData() {
+  const endpoint = getProfileEndpoint();
   const { data, error, isLoading, mutate } = useSWR<ProfileData, Error>(
-    "/api/auth/profile",
+    endpoint,
     fetcher,
     {
       revalidateOnFocus: false,
