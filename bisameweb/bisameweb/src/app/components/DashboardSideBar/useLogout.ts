@@ -2,11 +2,22 @@ import { getApiConfig } from '@/app/utils/apiConfig';
 
 // ... (existing imports)
 
+import Swal from 'sweetalert2';
+import { useAuth } from '@/app/hooks/useAuth';
+
 export const useLogout = () => {
   const { logout } = useAuth();
 
   const handleLogout = async () => {
-    // ... (sweetalert code)
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Do you really want to leave?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f97316',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, log out'
+    });
 
     if (result.isConfirmed) {
       try {
