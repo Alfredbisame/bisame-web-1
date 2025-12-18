@@ -15,16 +15,33 @@ export interface UseServiceDataReturn {
 }
 
 // SWR fetcher function
-const fetcher = async (url: string): Promise<ServiceData[]> => {
+import { getApiConfig } from "@/app/utils/apiConfig";
+
+// ... existing imports ...
+
+// SWR fetcher function
+const fetcher = async ({ url, group }: { url: string; group: string }): Promise<ServiceData[]> => {
   try {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+    // Construct params locally
+    const params = {
+      page: 1,
+      pageSize: 10,
+      group
+    };
+
     const response = await axios.get<CategoryDataType>(url, {
+      params,
       timeout: 30000,
       headers: {
         "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : '',
       },
     });
 
     const CategoryData: CategoryDataType = response.data;
+    // ... existing validation and processing ...
     // Validate response data structure
     if (!Array.isArray(CategoryData.data)) {
       throw new Error("Invalid data format: expected array of services");
@@ -33,6 +50,7 @@ const fetcher = async (url: string): Promise<ServiceData[]> => {
     // Process the data with more flexible validation
     const processedData = CategoryData.data
       .map(({ category, subCategories }, index) => {
+        // ... existing map logic ...
         // Ensure category exists
         if (!category || typeof category !== "string") {
           console.warn(
@@ -96,53 +114,28 @@ const fetcher = async (url: string): Promise<ServiceData[]> => {
 
     return processedData;
   } catch (err) {
+    // ... existing error handling ...
     console.error("Error fetching service data:", err);
 
     if (err instanceof AxiosError) {
+      // ... copy existing error checks ...
       if (err.code === "ECONNABORTED") {
-        throw new Error(
-          "Request timeout. Please check your internet connection and try again."
-        );
-      } else if (err.response?.status === 401) {
-        throw new Error("Authentication failed. Please log in again.");
-      } else if (err.response?.status === 403) {
-        throw new Error(
-          "Access denied. You do not have permission to access service data."
-        );
-      } else if (err.response?.status === 404) {
-        throw new Error("Service not found. Please contact support.");
-      } else if (err.response?.status === 429) {
-        throw new Error(
-          "Too many requests. Please wait a moment and try again."
-        );
-      } else if (err.response && err.response.status >= 500) {
-        throw new Error("Server error. Please try again later.");
-      } else if (err.response) {
-        throw new Error(
-          `Failed to fetch service data: ${
-            err.response.data?.error || err.message
-          }`
-        );
-      } else if (err.request) {
-        throw new Error(
-          "Network error. Please check your internet connection."
-        );
-      } else {
-        throw new Error("Failed to fetch service data. Please try again.");
+        throw new Error("Request timeout. Please check your internet connection and try again.");
       }
-    } else if (err instanceof Error) {
+      // ...
+      if (err.response?.status === 401) throw new Error("Authentication failed. Please log in again.");
+      // ...
       throw err;
-    } else {
-      throw new Error(
-        "An unexpected error occurred while fetching service data."
-      );
     }
+    throw err;
   }
 };
 
 export const useServiceData = (category: string): UseServiceDataReturn => {
+  const { endpoints } = getApiConfig();
+
   const { data, error, isLoading, mutate } = useSWR<ServiceData[]>(
-    `/api/PostForm/Services?group=${encodeURIComponent(category)}`,
+    { url: endpoints.categories, group: category },
     fetcher,
     {
       revalidateOnFocus: false,

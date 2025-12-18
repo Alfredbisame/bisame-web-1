@@ -1,19 +1,22 @@
 import axios from "axios";
 import useSWR from "swr";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 const usePopularData = () => {
-  const fetcher = async (url: string) => {
+  const fetcher = async () => {
     try {
-      const response = await axios.get(url);
+      const { endpoints } = getApiConfig();
+      const response = await axios.get(endpoints.popularSearch);
       if (response.status == 200) {
         return response.data;
       }
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 
-  const { data } = useSWR("/api/popularSearch", fetcher, {
+  const { data } = useSWR("popularSearch", fetcher, {
     revalidateOnFocus: true,
     revalidateOnMount: false,
     revalidateIfStale: false,

@@ -1,8 +1,8 @@
-"use client";
-
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
+import axios from "axios";
+import { getApiConfig } from "@/app/utils/apiConfig";
 import AllProducts from "../components/Products/AllProducts ";
 import SearchSort from "../components/Products/SearchSort";
 // import FilterCategory from '../components/ShopSideBar/FilterCategory';
@@ -79,21 +79,8 @@ interface BuySellStructure {
 
 // SWR fetcher function
 const fetcher = async (url: string): Promise<SearchResponse> => {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `HTTP error! status: ${response.status}`
-    );
-  }
-
-  return response.json();
+  const response = await axios.get(url);
+  return response.data;
 };
 
 // Search Results Component
@@ -109,20 +96,11 @@ const SearchResults: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [pageSize] = useState<number>(16);
   const { showFilter, handleShowFilter } = useShowFilter();
-  console.log(
-    searchParams.get("categoryGroup"),
-    ">",
-    searchParams.get("category"),
-    ">",
-    searchParams.get("subCategory")
-  );
 
   // Extract search parameters
   useEffect(() => {
-    //Case scenario of query name
+    // ... existing useEffect logic ...
     const query = searchParams.get("query") || searchParams.get("q") || "";
-
-    //Case scenario of buy and sell, category and subcategory query
     const categoryGroup = searchParams.get("categoryGroup") as string;
     const category = searchParams.get("category") as string;
     const subCategory = searchParams.get("subCategory") as string;
@@ -134,30 +112,31 @@ const SearchResults: React.FC = () => {
     setShouldFetch(!!query.trim());
   }, [searchParams]);
 
+  const { endpoints } = getApiConfig();
+
   // Construct the API URL
-  // const apiUrl =
-  //   shouldFetch && searchQuery.trim()
-  //     ? `/api/search?query=${encodeURIComponent(
-  //         searchQuery.trim()
-  //       )}&page=${page}&pageSize=${pageSize}`
-  //     : null;
+  let apiUrl: string | null = null;
 
-  // /api/listings/search?page=1&pageSize=10&categoryGroup=Buy%20and%20Sell&category=Vehicles&subCategory=Cars
+  if (searchBuySell.categoryGroup !== "" && !searchQuery.trim()) {
+    // Buy/Sell Logic - Use listings endpoint
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+      categoryGroup: searchBuySell.categoryGroup?.trim() || "",
+      category: searchBuySell.category?.trim() || "",
+      subCategory: searchBuySell.subCategory?.trim() || ""
+    });
+    apiUrl = `${endpoints.listings}?${params.toString()}`;
+  } else if (shouldFetch && searchQuery.trim()) {
+    // Search Logic - Use search endpoint
+    const params = new URLSearchParams({
+      query: searchQuery.trim(),
+      page: page.toString(),
+      pageSize: pageSize.toString()
+    });
+    apiUrl = `${endpoints.search}?${params.toString()}`;
+  }
 
-  const apiUrl =
-    searchBuySell.categoryGroup !== "" && !searchQuery.trim()
-      ? `/api/buysell?page=${page}&pageSize=${pageSize}&categoryGroup=${encodeURIComponent(
-          searchBuySell.categoryGroup?.trim() || ""
-        )}&category=${encodeURIComponent(
-          searchBuySell.category?.trim()
-        )}&subCategory=${encodeURIComponent(searchBuySell.subCategory?.trim())}`
-      : shouldFetch && searchQuery.trim()
-      ? `/api/search?query=${encodeURIComponent(
-          searchQuery.trim()
-        )}&page=${page}&pageSize=${pageSize}`
-      : null;
-
-  console.log(apiUrl);
   // Use SWR for data fetching
   const { data, error, isLoading, mutate } = useSWR<SearchResponse>(
     apiUrl,

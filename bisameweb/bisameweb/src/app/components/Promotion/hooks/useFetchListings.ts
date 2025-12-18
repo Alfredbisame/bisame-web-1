@@ -1,5 +1,6 @@
 import axios from "axios";
 import useSWR from "swr";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 export type categoryGroupType = "Buy and Sell" | "Services";
 
@@ -17,9 +18,17 @@ export interface ProfileListings {
   images: ImageProps[];
 }
 
-const fetcher = async (url: string) => {
+const fetcher = async ({ url, categoryGroup }: { url: string; categoryGroup: string }) => {
   try {
-    const response = await axios.get(url);
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+    const response = await axios.get(url, {
+      params: { categoryGroup },
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      }
+    });
+
     if (!response.data) {
       throw new Error("Error occurred fetching data");
     }
@@ -27,17 +36,19 @@ const fetcher = async (url: string) => {
     return response.data?.data.results;
   } catch (error) {
     console.error(error);
+    throw error;
   }
 };
 
 const useFetchListings = (categoryGroup: categoryGroupType | undefined) => {
   console.log(categoryGroup);
-  const apiUrl = `/api/profileListings?categoryGroup=${encodeURIComponent(
-    categoryGroup as categoryGroupType
-  )}`;
+  const { endpoints } = getApiConfig();
+
+  // Use a conditional key to avoid fetching if categoryGroup is undefined
+  const key = categoryGroup ? { url: endpoints.profileListings, categoryGroup } : null;
 
   const { data, error, isLoading, mutate } = useSWR<ProfileListings[]>(
-    apiUrl,
+    key,
     fetcher
   );
   return { data, error, isLoading, mutate };

@@ -5,6 +5,8 @@ import { HiOutlineSparkles, HiOutlineTrendingUp } from 'react-icons/hi';
 import useSWR from 'swr';
 import axios from 'axios';
 
+import { getApiConfig } from "@/app/utils/apiConfig";
+
 // Define types
 interface SuggestionItem {
   _id?: { $oid: string };
@@ -30,9 +32,32 @@ interface SearchSuggestionsProps {
 }
 
 // Fetcher function
-const fetcher = async (url: string): Promise<ApiResponse> => {
-  const response = await axios.get(url, { timeout: 8000 });
-  return response.data;
+const fetcher = async ({ url, query }: { url: string; query: string }): Promise<ApiResponse> => {
+  const token = process.env.NEXT_PUBLIC_API_AUTH_TOKEN;
+  const response = await axios.get(url, {
+    params: { q: query },
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'User-Agent': 'Bisame-Web-Client/1.0',
+    },
+    timeout: 8000
+  });
+
+  // Client-side filtering to match proxy behavior
+  const trimmedQuery = query.toLowerCase();
+  const filteredSuggestions = response.data.filter((item: SuggestionItem) =>
+    typeof item.name === 'string' && item.name.trim().toLowerCase().startsWith(trimmedQuery)
+  ).map((item: SuggestionItem) => ({
+    ...item,
+    name: item.name.trim(),
+  }));
+
+  return {
+    success: true,
+    suggestions: filteredSuggestions,
+    query: query,
+    count: filteredSuggestions.length
+  };
 };
 
 // Highlight matched text with modern styling
@@ -97,11 +122,11 @@ export default function SearchSuggestions({
 
   // Only fetch if query is valid
   const shouldFetch = debouncedQuery.trim().length >= 1;
-  const apiUrl = shouldFetch ? `/api/searchsuggestion?q=${encodeURIComponent(debouncedQuery.trim())}` : null;
+  const { endpoints } = getApiConfig();
 
   // Use SWR to fetch suggestions
   const { data, error, isLoading } = useSWR<ApiResponse>(
-    apiUrl,
+    shouldFetch ? { url: endpoints.searchSuggestions, query: debouncedQuery.trim() } : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -163,7 +188,7 @@ export default function SearchSuggestions({
     const handler = (e: KeyboardEvent) => {
       if (!isVisible) return;
       const totalItems = shouldFetch ? displayedSuggestions.length : recentSearches.length;
-      
+
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
@@ -204,8 +229,8 @@ export default function SearchSuggestions({
   if (!isVisible) return null;
 
   return (
-    <div 
-      ref={suggestionsRef} 
+    <div
+      ref={suggestionsRef}
       className={`absolute top-full left-0 right-0 mt-3 bg-white/95 backdrop-blur-lg border border-gray-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden transition-all duration-200 ${className}`}
       style={{
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
@@ -240,7 +265,7 @@ export default function SearchSuggestions({
               <FaClock className="text-sm" />
               <span className="text-sm font-semibold">Recent Searches</span>
             </div>
-            <button 
+            <button
               onClick={clearRecentSearches}
               className="text-xs text-gray-400 hover:text-red-500 transition-colors duration-200 flex items-center gap-1 hover:bg-red-50 px-2 py-1 rounded-lg"
             >
@@ -248,7 +273,7 @@ export default function SearchSuggestions({
               Clear
             </button>
           </div>
-          <div 
+          <div
             ref={scrollContainerRef}
             className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
           >
@@ -256,9 +281,8 @@ export default function SearchSuggestions({
               <button
                 key={`recent-${i}`}
                 onClick={() => handleSuggestionClick(search)}
-                className={`block w-full text-left px-5 py-3 transition-all duration-150 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 group ${
-                  selectedIndex === i ? 'bg-gradient-to-r from-orange-100 to-yellow-100 border-r-2 border-orange-400' : ''
-                }`}
+                className={`block w-full text-left px-5 py-3 transition-all duration-150 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 group ${selectedIndex === i ? 'bg-gradient-to-r from-orange-100 to-yellow-100 border-r-2 border-orange-400' : ''
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <FaClock className="text-gray-400 text-sm group-hover:text-orange-500 transition-colors" />
@@ -281,7 +305,7 @@ export default function SearchSuggestions({
               </span>
             </div>
           </div>
-          <div 
+          <div
             ref={!shouldFetch ? undefined : scrollContainerRef}
             className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-orange-300 scrollbar-track-transparent"
           >
@@ -289,9 +313,8 @@ export default function SearchSuggestions({
               <button
                 key={suggestion.id || `suggestion-${i}`}
                 onClick={() => handleSuggestionClick(suggestion.name)}
-                className={`block w-full text-left px-4 py-3 transition-all duration-200 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 group border-l-4 border-transparent hover:border-blue-500 ${
-                  selectedIndex === i ? 'bg-gradient-to-r from-orange-100 to-yellow-100 border-r-2 border-orange-400' : ''
-                }`}
+                className={`block w-full text-left px-4 py-3 transition-all duration-200 hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 group border-l-4 border-transparent hover:border-blue-500 ${selectedIndex === i ? 'bg-gradient-to-r from-orange-100 to-yellow-100 border-r-2 border-orange-400' : ''
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <FaSearch className="text-gray-400 text-sm group-hover:text-orange-500 transition-colors" />

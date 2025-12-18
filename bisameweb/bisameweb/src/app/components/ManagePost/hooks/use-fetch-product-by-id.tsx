@@ -1,6 +1,7 @@
-import { fetcher } from "@/app/Messages/utils";
 import { useEffect } from "react";
 import useSWR from "swr";
+import axios from "axios";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 type ListingDetailsResponse<T = unknown> = {
   data: T;
@@ -9,23 +10,12 @@ type ListingDetailsResponse<T = unknown> = {
 };
 
 const useFetchProductById = <T = unknown,>(productId: string) => {
-  const apiUrl = productId ? `/api/listing-details?id=${productId}` : null;
+  const { endpoints } = getApiConfig();
+  const apiUrl = productId ? endpoints.listingDetails(productId) : null;
 
-  const jsonFetcher = async (
-    url: string
-  ): Promise<ListingDetailsResponse<T>> => {
-    const res = await fetcher(url); // typed as Promise<Response | undefined>
-
-    if (!res) {
-      throw new Error("No response from server");
-    }
-
-    if (res instanceof Response) {
-      const json = (await res.json()) as unknown;
-      return json as ListingDetailsResponse<T>;
-    }
-
-    return res as unknown as ListingDetailsResponse<T>;
+  const jsonFetcher = async (url: string): Promise<ListingDetailsResponse<T>> => {
+    const res = await axios.get(url);
+    return res.data as ListingDetailsResponse<T>;
   };
 
   const {

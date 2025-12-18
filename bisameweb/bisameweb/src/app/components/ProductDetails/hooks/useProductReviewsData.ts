@@ -1,5 +1,6 @@
-// import useSWR from 'swr'; // unused variable
 import useSWRInfinite from 'swr/infinite';
+import axios from 'axios';
+import { getApiConfig } from "@/app/utils/apiConfig";
 import type { Review } from '../types';
 
 interface ApiResponse {
@@ -14,38 +15,35 @@ interface ApiResponse {
   message: string;
 }
 
-// function formatDate(dateString: string): string { // unused variable
-//   const date = new Date(dateString);
-//   if (isNaN(date.getTime())) return dateString;
-//   const day = date.getDate();
-//   const month = date.toLocaleString('default', { month: 'short' });
-//   const year = date.getFullYear();
-//   return `${day} ${month}, ${year}`;
-// }
-
 function ceilToOneDecimal(num: number): number {
-  return Math.ceil(num * 10) / 10; 
+  return Math.ceil(num * 10) / 10;
 }
 
-// function capitalizeWords(str: string): string { // unused variable
-//   return str.replace(/\b\w+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-// }
-
-const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) throw new Error('Failed to fetch Reviews data');
-  return res.json();
-});
+const fetcher = async (url: string) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const res = await axios.get(url, {
+    headers: {
+      Authorization: token ? `Bearer ${token}` : '',
+    }
+  });
+  return res.data;
+};
 
 // Function to get the key for SWR Infinite
 const getKey = (pageIndex: number, previousPageData: ApiResponse | null, userId: string | null) => {
+  const { endpoints } = getApiConfig();
+  // Using listingReviews endpoint (maps to /v1/api/customer-reviews)
+  const baseUrl = endpoints.listingReviews;
+
   // Reached the end
   if (previousPageData && previousPageData.data && previousPageData.data.results.length === 0) return null;
-  
-  // First page, we don't have previousPageData
-  if (pageIndex === 0) return userId ? `/api/listings-reviews?userId=${userId}&page=1&pageSize=5` : null;
-  
-  // Add the cursor to the API endpoint
-  return userId ? `/api/listings-reviews?userId=${userId}&page=${pageIndex + 1}&pageSize=5` : null;
+
+  if (!userId) return null;
+
+  // Construct URL with params
+  // First page or subsequent pages
+  const page = pageIndex + 1;
+  return `${baseUrl}?userId=${encodeURIComponent(userId)}&page=${page}&pageSize=5`;
 };
 
 export function useProductReviewsData(userId: string | null) {
@@ -53,7 +51,7 @@ export function useProductReviewsData(userId: string | null) {
     (...args) => getKey(args[0], args[1], userId),
     fetcher,
     {
-      dedupingInterval: 2 * 60 * 1000, // 2 minutes
+      dedupingInterval: 2 * 60 * 1000,
       revalidateIfStale: false,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
@@ -62,26 +60,26 @@ export function useProductReviewsData(userId: string | null) {
 
   // Flatten the paginated data
   const flatData = data ? data.flatMap(page => page.data?.results || []) : [];
-  
+
   // Check if there is more data to load
   const isEmpty = data?.[0]?.data?.results?.length === 0;
   const isReachingEnd = isEmpty || (data && data[data.length - 1]?.data?.results?.length < 5);
-  
+
   // Calculate total count and average rating
   let mapped: { reviews: Review[]; total: number; average_rating: number; totalPages: number } | null = null;
   if (data && data[0] && data[0].code === 200) {
     // Calculate average rating from the reviews
     let totalRating = 0;
     const reviewCount = flatData.length || 0;
-    
+
     // Use the reviews directly from the API response
     const reviews = flatData as Review[];
-    
+
     // Calculate total rating for average
     reviews.forEach((review: Review) => {
       totalRating += review.rating;
     });
-      
+
     const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
 
     mapped = {

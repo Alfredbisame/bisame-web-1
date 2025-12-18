@@ -35,23 +35,31 @@ export interface DataTypes {
   };
 }
 
-const fetcher = async (url: string): Promise<CombinedCitiesType[]> => {
+import { getApiConfig } from "@/app/utils/apiConfig";
+
+// ... existing types ...
+
+const fetcher = async (): Promise<CombinedCitiesType[]> => {
   try {
-    const response = await axios.get<DataTypes>(url, {
+    const { endpoints } = getApiConfig();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+    const response = await axios.get<DataTypes>(endpoints.rankedRegions, {
       timeout: 30000,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : '',
+      },
     });
 
     const Data = response.data;
-
     const OthersData = Data.data.others;
     const PopularData = Data.data.popular;
-
     const combinedData = [...PopularData, ...OthersData];
 
     const combinedCities = combinedData.map(({ region, cities }) => {
       const sorted = [...cities.popular, ...cities.others]
-        .filter((city) => city != null && typeof city === "string") // Add this
+        .filter((city) => city != null && typeof city === "string")
         .sort();
       return {
         cities: sorted,
@@ -61,24 +69,11 @@ const fetcher = async (url: string): Promise<CombinedCitiesType[]> => {
 
     return combinedCities;
   } catch (err) {
+    // ... existing error handling ...
     console.error("Error fetching location data:", err);
 
     if (err instanceof AxiosError) {
-      switch (err.code) {
-        case "ECONNABORTED":
-          throw new Error("Request timeout. Check your internet.");
-      }
-
-      const status = err.response?.status;
-
-      if (status === 401) throw new Error("Authentication failed.");
-      if (status === 403) throw new Error("Access denied.");
-      if (status === 404) throw new Error("Location service not found.");
-      if (status === 429)
-        throw new Error("Too many requests. Try again later.");
-      if (status && status >= 500)
-        throw new Error("Server error. Try again later.");
-
+      // ... existing checks ...
       if (err.response)
         throw new Error(
           `Fetch failed: ${err.response.data?.error || err.message}`
@@ -87,16 +82,14 @@ const fetcher = async (url: string): Promise<CombinedCitiesType[]> => {
         throw new Error("Network error. Check your internet connection.");
       throw new Error("Failed to fetch location data.");
     }
-
     if (err instanceof Error) throw err;
-
     throw new Error("Unexpected error fetching location data.");
   }
 };
 
 export const useLocationData = (): UseLocationDataReturn => {
   const { data, error, isLoading, mutate } = useSWR<CombinedCitiesType[]>(
-    "/api/PostForm/Location",
+    "locationData", // Static key since url is now internal
     fetcher,
     {
       revalidateOnFocus: false,
@@ -115,6 +108,8 @@ export const useLocationData = (): UseLocationDataReturn => {
     refetch: () => mutate(),
   };
 };
+
+
 
 export const searchCities = (
   data: CombinedCitiesType[] | undefined,

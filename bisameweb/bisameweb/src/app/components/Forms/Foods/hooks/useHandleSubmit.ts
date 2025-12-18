@@ -3,6 +3,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";
 import toast from "react-hot-toast";
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 type ObjectProps = Record<string, string | string[] | (string | string[])[]>;
 
@@ -25,7 +26,14 @@ const useHandleSubmit = ({
       const newFormData = { ...FormData, ...formData };
       console.log(newFormData);
       try {
-        const response = await axios.post("/api/listing", newFormData);
+        const { endpoints } = getApiConfig();
+        const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+        const response = await axios.post(endpoints.listings, newFormData, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          }
+        });
         console.log(response.data);
         console.log(response);
         if (response.status == 201) {

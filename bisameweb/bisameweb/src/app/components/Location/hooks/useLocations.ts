@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { getApiConfig } from "@/app/utils/apiConfig";
 
 export interface City {
   name: string;
@@ -11,6 +12,23 @@ export interface Region {
   cities: City[];
 }
 
+interface ApiCity {
+  city: string;
+  totalListings: number;
+}
+
+interface ApiRegionData {
+  totalListings: number;
+  cities: ApiCity[];
+  region: string;
+}
+
+interface ApiResponse {
+  code: number;
+  data: ApiRegionData[];
+  message: string;
+}
+
 interface UseLocationsResult {
   data: Region[] | null;
   loading: boolean;
@@ -18,33 +36,47 @@ interface UseLocationsResult {
   refetch: () => void;
 }
 
-const fetcher = async (url: string) => {
-  const res = await fetch(url);
+const fetcher = async () => {
+  const { endpoints } = getApiConfig();
+  const res = await fetch(endpoints.regions);
+
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({}));
     throw new Error(errorBody.message || 'Failed to fetch locations');
   }
-  return res.json();
-};
 
-// Cache key for consistent caching
-const LOCATIONS_CACHE_KEY = '/api/Locations';
+  const responseData: ApiResponse = await res.json();
+
+  // Transform data to match component expectation
+  if (responseData.data && Array.isArray(responseData.data)) {
+    return responseData.data.map(region => ({
+      region: region.region,
+      ads: region.totalListings,
+      cities: region.cities.map(city => ({
+        name: city.city,
+        ads: city.totalListings
+      }))
+    }));
+  }
+
+  return [];
+};
 
 // 24 hours in milliseconds
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 export function useLocations(): UseLocationsResult {
-  const { data, error, isLoading, mutate } = useSWR<Region[]>(LOCATIONS_CACHE_KEY, fetcher, {
-    dedupingInterval: CACHE_DURATION, 
-    refreshInterval: 0, 
-    revalidateOnFocus: false, 
+  const { data, error, isLoading, mutate } = useSWR<Region[]>('locations', fetcher, {
+    dedupingInterval: CACHE_DURATION,
+    refreshInterval: 0,
+    revalidateOnFocus: false,
     revalidateOnReconnect: false,
-    revalidateIfStale: false, 
-    refreshWhenHidden: false, 
-    refreshWhenOffline: false, 
-    shouldRetryOnError: true, 
-    errorRetryCount: 3, 
-    errorRetryInterval: 5000, 
+    revalidateIfStale: false,
+    refreshWhenHidden: false,
+    refreshWhenOffline: false,
+    shouldRetryOnError: true,
+    errorRetryCount: 3,
+    errorRetryInterval: 5000,
     keepPreviousData: true,
     provider: () => new Map(),
   });

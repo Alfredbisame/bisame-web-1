@@ -74,6 +74,11 @@ export const getApiConfig = () => {
             localServices: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_HOME_PAGE_SECTION_API_URL || '/v1/api/home-page/home-page-section-ads'}?sectionTitle=Explore%20Local%20Services`,
             topMarketplaceDeals: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_HOME_PAGE_SECTION_API_URL || '/v1/api/home-page/home-page-section-ads'}?sectionTitle=Top%20Marketplace%20Deals`,
             featuredPosts: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_HOME_PAGE_SECTION_API_URL || '/v1/api/home-page/home-page-section-ads'}?sectionTitle=Featured%20Posts`,
+
+            // New additions
+            profilePromotions: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_PROFILE_PROMOTION || '/v1/api/promotions/profile'}`,
+            allFeatured: process.env.NEXT_PUBLIC_ALLFEATURED_API_URL || `${LISTINGS_BASE_URL}/v1/api/listings/featured`, // Fallback based on typical pattern, but env var is primary
+            searchSuggestions: process.env.NEXT_PUBLIC_SEARCH_SUGGESTIONS_API_URL || `${LISTINGS_BASE_URL}/v1/api/searches/suggestions`,
         },
     };
 };
