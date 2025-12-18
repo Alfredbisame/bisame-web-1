@@ -32,6 +32,7 @@ export const getApiConfig = () => {
             listingDetails: (id: string) => `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_LISTING_DETAILS_API_URL?.replace('{id}', id) || `/v1/api/listings/${id}`}`,
             listings: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_LISTINGS_API_URL || '/v1/api/listings'}`,
             listingsSearch: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_LISTINGS_SEARCH || '/v1/api/listings/search'}`,
+            search: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_LISTINGS_SEARCH || '/v1/api/listings/search'}`,
             favoriteListings: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_FAVORITE_LISTINGS_API_URL || '/v1/api/listings/favorites'}`,
             recentViews: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_RECENT_VIEWS_API_URL || '/v1/api/listings/recent-views'}`,
             profileListings: `${LISTINGS_BASE_URL}${process.env.NEXT_PUBLIC_PROFILE_LISTINGS_API_URL || '/v1/api/profile/listings'}`,
